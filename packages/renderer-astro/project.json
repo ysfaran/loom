@@ -1,0 +1,27 @@
+{
+  "name": "renderer-astro",
+  "projectType": "library",
+  "sourceRoot": "packages/renderer-astro/src",
+  "root": "packages/renderer-astro",
+  "implicitDependencies": ["core"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @loom/renderer-astro build"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @loom/renderer-astro typecheck"
+      }
+    },
+    "clean": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @loom/renderer-astro clean"
+      }
+    }
+  }
+}

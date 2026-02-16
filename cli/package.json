@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@loom/core": "workspace:*",
+    "@loom/renderer-astro": "workspace:*",
     "@loom/renderer-vite-react": "workspace:*",
     "commander": "^13.1.0",
     "react": "^19.2.0",

@@ -3,7 +3,7 @@
   "projectType": "application",
   "sourceRoot": "cli/src",
   "root": "cli",
-  "implicitDependencies": ["core", "renderer-vite-react"],
+  "implicitDependencies": ["core", "renderer-vite-react", "renderer-astro"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",

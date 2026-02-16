@@ -1,0 +1,5 @@
+---
+import { onHeading } from './hooks';
+const props = onHeading(4, Astro.props);
+---
+<h4 {...props}><slot /></h4>

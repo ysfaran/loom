@@ -16,7 +16,7 @@ Easy docs for devs and AI.
 ## Current CLI Commands
 - `loom list [path]` (alias: `loom ls [path]`)
 - `loom validate [path]`
-- `loom build [path] --out <path>`
-- `loom dev [path] --port <port>`
+- `loom build [path] --out <path> --renderer <vite-react|astro>`
+- `loom dev [path] --port <port> --renderer <vite-react|astro>`
 
 All commands default to the current working directory when `[path]` is omitted.

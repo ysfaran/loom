@@ -21,4 +21,17 @@ describe('loom dev', () => {
       expect(execError.stdout ?? '').toContain('Invalid port: invalid');
     }
   });
+
+  it('rejects unknown renderer values', async () => {
+    try {
+      await execFileAsync('node', [cliPath, 'dev', scenarioPath, '--renderer', 'unknown', '--port', '4173'], {
+        cwd: repoRoot
+      });
+      throw new Error('Expected dev command to fail with unknown renderer.');
+    } catch (error) {
+      const execError = error as { code?: number; stdout?: string };
+      expect(execError.code).toBe(1);
+      expect(execError.stdout ?? '').toContain("Invalid renderer: unknown. Expected 'vite-react' or 'astro'.");
+    }
+  });
 });

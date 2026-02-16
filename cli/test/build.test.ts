@@ -34,6 +34,29 @@ describe('loom build', () => {
     expect(assetsDirEntries.some((entry) => entry.endsWith('.js'))).toBe(true);
   });
 
+  it('builds static output with astro renderer', async () => {
+    const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-valid');
+    const outDir = await mkdtemp(join(tmpdir(), 'loom-build-astro-'));
+    tempDirs.push(outDir);
+
+    const { stdout } = await execFileAsync(
+      'node',
+      [cliPath, 'build', scenarioPath, '--out', outDir, '--renderer', 'astro'],
+      {
+        cwd: repoRoot
+      }
+    );
+
+    expect(stdout).toContain('Built 2 pages to');
+
+    const indexHtml = await readFile(join(outDir, 'index.html'), 'utf8');
+    const setupHtml = await readFile(join(outDir, 'guide', 'setup', 'index.html'), 'utf8');
+
+    expect(indexHtml).toContain('Loom Docs');
+    expect(indexHtml).toContain('Welcome to docs.');
+    expect(setupHtml).toContain('Run install first.');
+  });
+
   it('fails when validation finds invalid mdx', async () => {
     const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-invalid');
     const outDir = await mkdtemp(join(tmpdir(), 'loom-build-'));
@@ -50,6 +73,27 @@ describe('loom build', () => {
       expect(execError.stdout ?? '').toContain('broken.mdx');
       expect(execError.stdout ?? '').toContain('[mdx/parse-error]');
       expect(execError.stdout ?? '').toContain('Build failed: 1 validation error.');
+    }
+  });
+
+  it('fails for unknown renderer value', async () => {
+    const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-valid');
+    const outDir = await mkdtemp(join(tmpdir(), 'loom-build-'));
+    tempDirs.push(outDir);
+
+    try {
+      await execFileAsync(
+        'node',
+        [cliPath, 'build', scenarioPath, '--out', outDir, '--renderer', 'unknown'],
+        {
+          cwd: repoRoot
+        }
+      );
+      throw new Error('Expected build command to fail for unknown renderer.');
+    } catch (error) {
+      const execError = error as { code?: number; stdout?: string };
+      expect(execError.code).toBe(1);
+      expect(execError.stdout ?? '').toContain("Invalid renderer: unknown. Expected 'vite-react' or 'astro'.");
     }
   });
 });

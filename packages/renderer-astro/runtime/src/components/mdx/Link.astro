@@ -1,0 +1,5 @@
+---
+import { onLink } from './hooks';
+const props = onLink(Astro.props);
+---
+<a {...props}><slot /></a>
