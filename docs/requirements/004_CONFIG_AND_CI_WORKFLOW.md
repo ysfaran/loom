@@ -7,7 +7,7 @@ As a project maintainer, I want Loom behavior to be configurable and CI-friendly
 - Loom supports a root configuration file.
 - CLI commands can run fully non-interactive in CI.
 - Validation can be used as a required quality gate.
-- JSON output is stable enough for machine parsing.
+- Validation output is clear and stable enough for CI logs and pull request review.
 
 ## Technical Details
 - Config file proposal: `loom.config.ts`
@@ -22,6 +22,6 @@ As a project maintainer, I want Loom behavior to be configurable and CI-friendly
   - command-line flags override config values
   - config values override defaults
 - CI patterns:
-  - `loom scan [path] --json`
-  - `loom validate [path] --json`
+  - `loom list [path]`
+  - `loom validate [path]`
   - `loom build [path]`

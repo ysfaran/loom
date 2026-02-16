@@ -23,7 +23,6 @@ As a developer, I want Loom CLI to validate MDX files and report exact issues so
   - `links/broken-internal`
 - External link checks are out of scope in MVP.
 - Parser and validation dependencies must be version-pinned.
-- JSON output should include:
-  - `errors[]` with `ruleId`, `message`, `file`, `line`, `column`
-  - `warnings[]`
-  - `summary`
+- Validation output should include:
+  - `errors[]` semantics with `ruleId`, `message`, `file`, `line`, `column` (when available)
+  - a final summary line with total errors and files checked
