@@ -18,7 +18,10 @@
   },
   "dependencies": {
     "@loom/core": "workspace:*",
-    "commander": "^13.1.0"
+    "@loom/renderer-vite-react": "workspace:*",
+    "commander": "^13.1.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",

@@ -17,5 +17,6 @@ Easy docs for devs and AI.
 - `loom list [path]` (alias: `loom ls [path]`)
 - `loom validate [path]`
 - `loom build [path] --out <path>`
+- `loom dev [path] --port <port>`
 
 All commands default to the current working directory when `[path]` is omitted.

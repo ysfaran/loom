@@ -30,3 +30,9 @@ Rules:
 - Do not end subject with a period.
 - Use `!` after type/scope for breaking changes, for example: `feat(cli)!: change default scan behavior`.
 - Add a `BREAKING CHANGE:` footer in the body when applicable.
+
+## Code Readability Preferences
+- Prefer top-to-bottom readable flow in files.
+- Avoid extracting tiny single-use helper functions when inline logic is clearer.
+- Keep related build/runtime setup steps close together in one place when practical.
+- Extract helpers only when logic is reused or significantly improves clarity.
