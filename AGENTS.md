@@ -36,3 +36,4 @@ Rules:
 - Avoid extracting tiny single-use helper functions when inline logic is clearer.
 - Keep related build/runtime setup steps close together in one place when practical.
 - Extract helpers only when logic is reused or significantly improves clarity.
+- Do not add pass-through wrappers or speculative abstraction layers (for example `createX` that only forwards to `runX`) unless there is a concrete reuse or behavior difference.

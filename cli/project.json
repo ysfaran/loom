@@ -3,7 +3,7 @@
   "projectType": "application",
   "sourceRoot": "cli/src",
   "root": "cli",
-  "implicitDependencies": ["core", "renderer-vite-react", "renderer-astro"],
+  "implicitDependencies": ["core", "renderer-vite-react"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -19,12 +19,22 @@
     },
     "dev": {
       "executor": "nx:run-commands",
+      "continuous": true,
+      "dependsOn": ["build", "^build"],
       "options": {
-        "command": "pnpm --filter @loom/cli dev"
+        "command": "node cli/dist/cli.js dev"
+      }
+    },
+    "loom": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build", "^build"],
+      "options": {
+        "command": "node cli/dist/cli.js"
       }
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build", "^build"],
       "options": {
         "command": "pnpm --filter @loom/cli test"
       }

@@ -1,0 +1,14 @@
+{
+  "name": "@loom/template",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "loom": "loom"
+  },
+  "dependencies": {
+    "@loom/cli": "workspace:*",
+    "@loom/core": "workspace:*",
+    "@loom/renderer-vite-react": "workspace:*"
+  }
+}

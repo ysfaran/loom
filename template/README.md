@@ -1,9 +1,9 @@
 # Template Content
 
-Use `template/basic` for local development and smoke testing.
+Use `template` for local development and smoke testing.
 
 Example:
 
 ```bash
-loom dev template/basic --port 4173
+pnpm loom dev . --port 4173
 ```

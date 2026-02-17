@@ -9,6 +9,7 @@
     "test": "nx run-many -t test",
     "test:cli": "nx run cli:test",
     "dev": "nx run cli:dev",
+    "dev:template": "pnpm nx run cli:dev -- template --port 4173",
     "clean": "nx run-many -t clean"
   },
   "devDependencies": {

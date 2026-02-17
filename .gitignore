@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 # Nx
 .nx
 .loom-runtime
+
+.tmp*
