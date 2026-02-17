@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -35,17 +35,13 @@ describe('loom build', () => {
   });
 
   it('builds static output with astro renderer', async () => {
-    const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-valid');
+    const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-valid-astro');
     const outDir = await mkdtemp(join(tmpdir(), 'loom-build-astro-'));
     tempDirs.push(outDir);
 
-    const { stdout } = await execFileAsync(
-      'node',
-      [cliPath, 'build', scenarioPath, '--out', outDir, '--renderer', 'astro'],
-      {
-        cwd: repoRoot
-      }
-    );
+    const { stdout } = await execFileAsync('node', [cliPath, 'build', scenarioPath, '--out', outDir], {
+      cwd: repoRoot
+    });
 
     expect(stdout).toContain('Built 2 pages to');
 
@@ -55,6 +51,29 @@ describe('loom build', () => {
     expect(indexHtml).toContain('Loom Docs');
     expect(indexHtml).toContain('Welcome to docs.');
     expect(setupHtml).toContain('Run install first.');
+  });
+
+  it('loads loom.config.ts plugins and renderer defaults', async () => {
+    const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-with-config');
+    const outDir = await mkdtemp(join(tmpdir(), 'loom-build-config-'));
+    tempDirs.push(outDir);
+
+    const { stdout } = await execFileAsync('node', [cliPath, 'build', scenarioPath, '--out', outDir], {
+      cwd: repoRoot
+    });
+
+    expect(stdout).toContain('Built 2 pages to');
+
+    const indexHtml = await readFile(join(outDir, 'index.html'), 'utf8');
+    const adrTreeHtml = await readFile(join(outDir, 'adr-tree', 'index.html'), 'utf8');
+
+    expect(indexHtml).toContain('Plugin Config Docs');
+    expect(indexHtml).toContain('Plugin transform marker.');
+    expect(indexHtml).toContain('id="adr-banner"');
+    expect(indexHtml).toContain('id="plugin-header"');
+    expect(indexHtml).toContain('id="plugin-footer"');
+    expect(adrTreeHtml).toContain('ADR Tree');
+    expect(indexHtml).not.toContain('<div id="root"></div>');
   });
 
   it('fails when validation finds invalid mdx', async () => {
@@ -76,24 +95,25 @@ describe('loom build', () => {
     }
   });
 
-  it('fails for unknown renderer value', async () => {
+  it('fails when no renderer is configured', async () => {
     const scenarioPath = resolve(import.meta.dirname, 'scenarios/build-valid');
+    const scenarioDir = await mkdtemp(join(tmpdir(), 'loom-build-no-renderer-'));
     const outDir = await mkdtemp(join(tmpdir(), 'loom-build-'));
+    tempDirs.push(scenarioDir);
     tempDirs.push(outDir);
 
+    await cp(scenarioPath, scenarioDir, { recursive: true });
+    await rm(join(scenarioDir, 'loom.config.ts'), { force: true });
+
     try {
-      await execFileAsync(
-        'node',
-        [cliPath, 'build', scenarioPath, '--out', outDir, '--renderer', 'unknown'],
-        {
-          cwd: repoRoot
-        }
-      );
-      throw new Error('Expected build command to fail for unknown renderer.');
+      await execFileAsync('node', [cliPath, 'build', scenarioDir, '--out', outDir], {
+        cwd: repoRoot
+      });
+      throw new Error('Expected build command to fail without a configured renderer.');
     } catch (error) {
       const execError = error as { code?: number; stdout?: string };
       expect(execError.code).toBe(1);
-      expect(execError.stdout ?? '').toContain("Invalid renderer: unknown. Expected 'vite-react' or 'astro'.");
+      expect(execError.stdout ?? '').toContain('No renderer configured.');
     }
   });
 });

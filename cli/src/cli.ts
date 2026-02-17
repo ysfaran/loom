@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { resolve } from 'node:path';
-import { scanMdxFiles, validateMdxFiles } from '@loom/core';
-import { buildWithAstro, startAstroDevServer } from '@loom/renderer-astro';
-import { buildWithViteReact, startViteReactDevServer } from '@loom/renderer-vite-react';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { constants as fsConstants } from 'node:fs';
+import { createLoom, loadLoomConfig, resolveRendererFromContext, scanMdxFiles, validateMdxFiles } from '@loom/core';
 
 function resolveTargetPath(inputPath?: string): string {
   return resolve(process.cwd(), inputPath ?? '.');
@@ -12,10 +12,56 @@ function resolveTargetPath(inputPath?: string): string {
 
 const program = new Command();
 
+async function createRuntime(targetPath: string) {
+  const config = await loadLoomConfig(targetPath);
+  const loom = createLoom();
+
+  for (const plugin of config.runtimePlugins) {
+    await loom.use(plugin);
+  }
+
+  return {
+    config,
+    renderer: resolveRendererFromContext(loom.context)
+  };
+}
+
 program
   .name('loom')
   .description('Loom CLI for MDX documentation workflows')
   .version('0.1.0');
+
+program
+  .command('init [path]')
+  .description('Create a loom.config.ts with the default renderer plugin')
+  .action(async (path: string | undefined) => {
+    const targetPath = resolveTargetPath(path);
+    const configPath = join(targetPath, 'loom.config.ts');
+
+    await mkdir(targetPath, { recursive: true });
+
+    try {
+      await access(configPath, fsConstants.F_OK);
+      console.log(`Config already exists: ${configPath}`);
+      process.exitCode = 1;
+      return;
+    } catch {
+      // No config yet.
+    }
+
+    const configSource = `import { defineLoomConfig } from '@loom/core';
+import { viteReactRendererPlugin } from '@loom/renderer-vite-react';
+
+export default defineLoomConfig({
+  plugins: [viteReactRendererPlugin]
+});
+`;
+
+    await mkdir(dirname(configPath), { recursive: true });
+    await writeFile(configPath, configSource, 'utf8');
+
+    console.log(`Created ${configPath}`);
+  });
 
 program
   .command('list [path]')
@@ -60,10 +106,10 @@ program
   .command('build [path]')
   .description('Build docs site from a target path (default: current directory)')
   .option('--out <path>', 'Output directory', 'dist/docs')
-  .option('--renderer <renderer>', 'Renderer to use (vite-react or astro)', 'vite-react')
-  .action(async (path: string | undefined, options: { out: string; renderer: string }) => {
+  .action(async (path: string | undefined, options: { out: string }) => {
     const targetPath = resolveTargetPath(path);
     const outPath = resolve(process.cwd(), options.out);
+    const { config, renderer } = await createRuntime(targetPath);
     const validation = await validateMdxFiles(targetPath);
 
     if (validation.errorCount > 0) {
@@ -79,18 +125,17 @@ program
       return;
     }
 
-    const buildResult =
-      options.renderer === 'astro'
-        ? await buildWithAstro(targetPath, outPath)
-        : options.renderer === 'vite-react'
-          ? await buildWithViteReact(targetPath, outPath)
-          : null;
-
-    if (!buildResult) {
-      console.log(`Invalid renderer: ${options.renderer}. Expected 'vite-react' or 'astro'.`);
+    if (!renderer) {
+      console.log('No renderer configured. Add a renderer plugin as the first entry in plugins[] or run "loom init".');
       process.exitCode = 1;
       return;
     }
+
+    const buildResult = await renderer.build({
+      sourceRoot: targetPath,
+      outputDir: outPath,
+      config
+    });
 
     console.log(
       `Built ${buildResult.pageCount} page${buildResult.pageCount === 1 ? '' : 's'} to ${buildResult.outDir} in ${buildResult.durationMs}ms.`
@@ -101,8 +146,7 @@ program
   .command('dev [path]')
   .description('Start docs dev server with hot reloading (default: current directory)')
   .option('--port <port>', 'Port for dev server', '4173')
-  .option('--renderer <renderer>', 'Renderer to use (vite-react or astro)', 'vite-react')
-  .action(async (path: string | undefined, options: { port: string; renderer: string }) => {
+  .action(async (path: string | undefined, options: { port: string }) => {
     const targetPath = resolveTargetPath(path);
     const port = Number.parseInt(options.port, 10);
 
@@ -112,18 +156,19 @@ program
       return;
     }
 
-    const server =
-      options.renderer === 'astro'
-        ? await startAstroDevServer(targetPath, port)
-        : options.renderer === 'vite-react'
-          ? await startViteReactDevServer(targetPath, port)
-          : null;
+    const { config, renderer } = await createRuntime(targetPath);
 
-    if (!server) {
-      console.log(`Invalid renderer: ${options.renderer}. Expected 'vite-react' or 'astro'.`);
+    if (!renderer) {
+      console.log('No renderer configured. Add a renderer plugin as the first entry in plugins[] or run "loom init".');
       process.exitCode = 1;
       return;
     }
+
+    const server = await renderer.dev({
+      sourceRoot: targetPath,
+      port,
+      config
+    });
     console.log(`Serving ${server.pageCount} page${server.pageCount === 1 ? '' : 's'} at ${server.url}`);
 
     const shutdown = async (): Promise<void> => {
